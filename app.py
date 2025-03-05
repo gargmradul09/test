@@ -24,14 +24,19 @@ with app.app_context():
 HIBP_API = "https://api.pwnedpasswords.com/range/"
 
 def check_breach(password):
-    """Check if password is in HIBP breach database."""
-    sha1_password = hashlib.sha1(password.encode()).hexdigest().upper()
-    prefix, suffix = sha1_password[:5], sha1_password[5:]
+    """Check if a password has been leaked using the HIBP API."""
+    sha1_hash = hashlib.sha1(password.encode()).hexdigest().upper()
+    prefix, suffix = sha1_hash[:5], sha1_hash[5:]
+
     response = requests.get(HIBP_API + prefix)
-    
-    if suffix in response.text:
-        return True  # Password is breached
-    return False
+
+    if response.status_code == 200:
+        hashes = (line.split(':') for line in response.text.splitlines())
+        for h, count in hashes:
+            if h == suffix:
+                return f"⚠️ Password found in {count} breaches!"
+        return "✅ Password is safe (not found in breaches)."
+    return "❌ HIBP API Error. Try again later."
 
 def check_strength(password):
     """Basic password strength checker (can be improved)."""
@@ -51,11 +56,11 @@ def analyze_password():
     password = data['password']
 
     strength = check_strength(password)
-    breached = check_breach(password)
+    breach_result = check_breach(password)
 
-    if breached:
-        return jsonify({'message': "⚠️ Password found in data breaches!"})
-    
+    if "⚠️ Password found" in breach_result:
+        return jsonify({'message': breach_result})
+
     # Hash and store non-breached passwords
     hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     new_entry = Password(password_hash=hashed_password)
