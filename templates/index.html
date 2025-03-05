@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Password Security</title>
+    <script>
+        function checkPassword() {
+            let password = document.getElementById("password").value;
+            fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = data.message;
+            });
+        }
+    </script>
+</head>
+<body>
+    <h2>Password Security Tool</h2>
+    <input type="password" id="password">
+    <button onclick="checkPassword()">Check</button>
+    <p id="result"></p>
+</body>
+</html>
+
