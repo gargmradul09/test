@@ -30,4 +30,5 @@ Sentry-SDK
 pymongo
 psycopg2
 redis
+gunicorn app:app --timeout 60 --workers 3 --bind 0.0.0.0:10000
 
